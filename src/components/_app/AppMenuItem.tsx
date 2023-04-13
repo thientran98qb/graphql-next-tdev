@@ -1,14 +1,16 @@
 import { ListItemButton, ListItemIcon, Typography } from '@mui/material'
+import NextLink from 'next/link'
 import React, { ReactNode } from 'react'
 
 type Props = {
   icon: ReactNode,
-  children: string
+  children: string,
+  path: string
 }
 
-const AppMenuItem = ({icon, children}: Props) => {
+const AppMenuItem = ({icon, children, path}: Props) => {
   return (
-    <ListItemButton>
+    <ListItemButton component={NextLink} href={path} selected={window.location.pathname === path}>
       <ListItemIcon>
         {icon}
       </ListItemIcon>

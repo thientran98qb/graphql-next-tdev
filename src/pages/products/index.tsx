@@ -1,11 +1,10 @@
-import ProductTable from '@/components/products/ProductTable'
-import { Autocomplete, Box, TextField, Typography } from '@mui/material'
-import React, { useEffect, useMemo, useState } from 'react'
 import { Loader } from "@/components/Loader";
-import { GET_PRODUCTS, GET_PRODUCT_CONNECTIONS } from "@/models/products/query"
-import { useQuery } from "@apollo/client"
-import { GET_CATEGORIES } from '@/models/categories/query';
-import { Category } from '@/types/category';
+import FilterProduct from '@/components/products/FilterProduct';
+import ProductTable from '@/components/products/ProductTable';
+import { GET_PRODUCT_CONNECTIONS } from "@/models/products/query";
+import { useQuery } from "@apollo/client";
+import { Box, Typography } from '@mui/material';
+import { SyntheticEvent, useEffect, useMemo, useState } from 'react';
 
 const productQuery = {
   id: ""
@@ -13,55 +12,54 @@ const productQuery = {
 type ProductQuery = typeof productQuery
 const ProductPage = () => {
   const [query, setQuery] = useState<ProductQuery>(productQuery)
-  const {loading, error, data, refetch} = useQuery(GET_PRODUCT_CONNECTIONS, {
-    variables: query
+  const {loading, error, data, fetchMore, refetch} = useQuery(GET_PRODUCT_CONNECTIONS, {
+    variables: productQuery
   })
-  const {loading: categoriesLoading, error: errorCategories, data: dataCategories} = useQuery(GET_CATEGORIES)
+  const products = useMemo(
+    () => {
+      console.log(data);
+
+      return (data?.productsConnection?.edges?.map((e: any) => e?.node ?? null)) ?? []
+    },
+    [data]
+  )
+
+  const handleChangeOption = (
+    _: SyntheticEvent,
+    value: any
+  ) => {
+    setQuery((prevState) => ({
+      ...prevState,
+      id: value || ""
+    }));
+  }
 
   useEffect(() => {
     refetch(query);
   }, [query]);
 
-  const products = useMemo(
-    () => (data?.productsConnection?.edges?.map((e: any) => e?.node ?? null)) ?? [],
-    [data]
-  )
-
   if (loading) return <Loader fullHeight/>
-  console.log(data);
   return (
-    <div>
+    <Box>
       <Typography>Product lists</Typography>
-      <Autocomplete
-        id="combo-box-demo"
-        autoHighlight
-        options={dataCategories?.categories ?? []}
-        loading={categoriesLoading}
-        getOptionLabel={(option: Category) => option?.name}
-        renderOption={(props, option: Category) => (
-          <Box component="li" {...props}>
-            {option?.name}
-          </Box>
-        )}
-        onInputChange={(event, valueInput) => {
-
-        }}
-        onChange={(event, valueOption) => {
-          console.log(valueOption);
-          setQuery({
-            id: valueOption?.id || ""
-          })
-        }}
-        renderInput={(params) => <TextField {...params} label="Category" />}
-        sx={{
-          py: 2,
-          width: "300px"
-        }}
+      <FilterProduct
+        handleChangeOption={handleChangeOption}
       />
       <ProductTable
+        dataLength={data?.productsConnection?.edges?.length ?? 0}
+        hasMore={data?.productsConnection?.pageInfo?.hasNextPage ?? false}
+        next={() => {
+          console.log(13123);
+
+          fetchMore({
+            variables: {
+              after: data?.productsConnection?.pageInfo?.endCursor,
+            }
+          })
+        }}
         data={products}
       />
-    </div>
+    </Box>
   )
 }
 

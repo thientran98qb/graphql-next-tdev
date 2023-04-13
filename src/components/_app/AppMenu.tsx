@@ -7,9 +7,22 @@ type Props = {}
 
 const AppMenu = (props: Props) => {
   return (
-    <List>
+    <List
+      sx={{
+        display: "flex",
+        flexDirection: "column",
+        gap: "10px"
+      }}
+    >
+       <AppMenuItem
+        icon={<SourceIcon/>}
+        path="/"
+      >
+        Dashboard
+      </AppMenuItem>
       <AppMenuItem
         icon={<SourceIcon/>}
+        path="/products"
       >
         Products
       </AppMenuItem>
